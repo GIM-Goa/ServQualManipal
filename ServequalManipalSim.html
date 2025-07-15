@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Experience Designer</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f9ff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .dashboard {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .budget-tracker {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 30%;
+        }
+        .metrics {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 65%;
+            display: flex;
+            justify-content: space-between;
+        }
+        .metric-item {
+            text-align: center;
+            width: 30%;
+        }
+        .options-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .option-card {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .option-card.selected {
+            border: 2px solid #3498db;
+            background-color: #ebf7ff;
+        }
+        .option-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .option-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .option-cost {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .option-dimensions span {
+            background-color: #f1c40f;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-right: 5px;
+            color: #34495e;
+        }
+        .option-gap {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+        .actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .feedback {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 30px;
+            display: none;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted #7f8c8d;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: #34495e;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Quality Manager: The Healthcare Experience Designer</h1>
+        <p>Can you improve the healthcare experience at Manipal Hospital, Goa!</p>
+    </div>
+    
+    <div class="dashboard">
+        <div class="budget-tracker">
+            <h3>Budget Tracker</h3>
+            <p>Available: ₹<span id="available-budget">10,00,000</span></p>
+            <p>Spent: ₹<span id="spent-budget">0</span></p>
+            <p>Remaining: ₹<span id="remaining-budget">10,00,000</span></p>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric-item">
+                <h3>CSAT Score</h3>
+                <div id="csat-score">70%</div>
+                <div id="csat-change">+0%</div>
+            </div>
+            <div class="metric-item">
+                <h3>Loyalty Index</h3>
+                <div id="loyalty-score">65%</div>
+                <div id="loyalty-change">+0%</div>
+            </div>
+            <div class="metric-item">
+                <h3>Service GAPs</h3>
+                <div id="gap-score">High</div>
+                <div id="gap-change">No Change</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="options-container" id="options">
+        <!-- Options will be dynamically generated here -->
+    </div>
+    
+    <div class="actions">
+        <button id="submit-btn">Submit Your Plan</button>
+        <button id="reset-btn">Reset Selections</button>
+    </div>
+    
+    <div class="feedback" id="feedback">
+        <h2>Simulation Results</h2>
+        <div id="feedback-content"></div>
+    </div>
+    
+    <script>
+        // Service improvement options data
+        const serviceOptions = [
+            {
+                id: 1,
+                title: "Intensive Frontline Staff Training",
+                cost: 250000,
+                primaryDimension: "Empathy",
+                secondaryDimension: "Assurance",
+                effects: "+CSAT, -GAP",
+                gap: "Service Delivery Gap – Improves staff behaviour, attitude, consistency",
+                csatImpact: 8,
+                loyaltyImpact: 5,
+                gapReduction: 7
+            },
+            {
+                id: 2,
+                title: "Redesign Signage & Navigation Aids",
+                cost: 120000,
+                primaryDimension: "Tangibles",
+                secondaryDimension: "Responsiveness",
+                effects: "+CSAT",
+                gap: "Service Experience/Perception Gap – Reduces patient confusion and frustration",
+                csatImpact: 6,
+                loyaltyImpact: 3,
+                gapReduction: 5
+            },
+            {
+                id: 3,
+                title: "Real-time Queue Display System",
+                cost: 200000,
+                primaryDimension: "Responsiveness",
+                secondaryDimension: "",
+                effects: "+Loyalty, -GAP",
+                gap: "Communication Gap – Sets real-time expectations, improves transparency",
+                csatImpact: 7,
+                loyaltyImpact: 8,
+                gapReduction: 6
+            },
+            {
+                id: 4,
+                title: "Lounge & Reception Area Upgrade",
+                cost: 180000,
+                primaryDimension: "Tangibles",
+                secondaryDimension: "",
+                effects: "+CSAT",
+                gap: "Perception Gap – Enhances environmental cues that shape experience",
+                csatImpact: 7,
+                loyaltyImpact: 4,
+                gapReduction: 3
+            },
+            {
+                id: 5,
+                title: "Advanced Diagnostic Equipment Upgrade",
+                cost: 400000,
+                primaryDimension: "Reliability",
+                secondaryDimension: "",
+                effects: "+Loyalty",
+                gap: "Policy & Design Gap – Reduces errors/delays due to outdated systems",
+                csatImpact: 5,
+                loyaltyImpact: 9,
+                gapReduction: 6
+            },
+            {
+                id: 6,
+                title: "Launch Patient Mobile App",
+                cost: 250000,
+                primaryDimension: "Responsiveness",
+                secondaryDimension: "Assurance",
+                effects: "+CSAT, +Loyalty",
+                gap: "Communication Gap – Improves access and convenience of information flow",
+                csatImpact: 8,
+                loyaltyImpact: 8,
+                gapReduction: 7
+            },
+            {
+                id: 7,
+                title: "Standardized Post-Discharge Follow-up Calls",
+                cost: 150000,
+                primaryDimension: "Empathy",
+                secondaryDimension: "",
+                effects: "+CSAT, -GAP",
+                gap: "Service Delivery Gap – Ensures continuity and personalisation",
+                csatImpact: 7,
+                loyaltyImpact: 6,
+                gapReduction: 5
+            },
+            {
+                id: 8,
+                title: "24x7 Patient Helpdesk Hotline",
+                cost: 180000,
+                primaryDimension: "Responsiveness",
+                secondaryDimension: "Empathy",
+                effects: "+CSAT",
+                gap: "Communication Gap – Reduces information uncertainty and waiting anxiety",
+                csatImpact: 8,
+                loyaltyImpact: 7,
+                gapReduction: 8
+            },
+            {
+                id: 9,
+                title: "Feedback Kiosk & Analytics Setup",
+                cost: 120000,
+                primaryDimension: "Assurance",
+                secondaryDimension: "",
+                effects: "+Loyalty, -GAP",
+                gap: "Knowledge/Market Sensing Gap – Brings patient voice into internal improvements",
+                csatImpact: 4,
+                loyaltyImpact: 7,
+                gapReduction: 9
+            },
+            {
+                id: 10,
+                title: "Mystery Patient Audit Program",
+                cost: 160000,
+                primaryDimension: "Reliability",
+                secondaryDimension: "Assurance",
+                effects: "-GAP",
+                gap: "Policy & Design Gap – Identifies hidden flaws in processes and SOPs",
+                csatImpact: 3,
+                loyaltyImpact: 5,
+                gapReduction: 8
+            }
+        ];
+
+        // Game state
+        let selectedOptions = [];
+        let totalBudget = 1000000;
+        let spentBudget = 0;
+        let baseCsat = 70;
+        let baseLoyalty = 65;
+        let baseGap = "High";
+
+        // Initialize the game
+        function initGame() {
+            renderOptions();
+            updateBudget();
+            updateMetrics();
+            
+            // Add event listeners
+            document.getElementById('submit-btn').addEventListener('click', submitPlan);
+            document.getElementById('reset-btn').addEventListener('click', resetSelections);
+        }
+
+        // Render service improvement options
+        function renderOptions() {
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            serviceOptions.forEach(option => {
+                const optionCard = document.createElement('div');
+                optionCard.className = 'option-card';
+                optionCard.dataset.id = option.id;
+                
+                if (selectedOptions.includes(option.id)) {
+                    optionCard.classList.add('selected');
+                }
+                
+                optionCard.innerHTML = `
+                    <div class="option-title">${option.title}</div>
+                    <div class="option-details">
+                        <div class="option-cost">₹${(option.cost/100000).toFixed(1)}L</div>
+                        <div class="option-dimensions">
+                            <span>${option.primaryDimension}</span>
+                            ${option.secondaryDimension ? `<span>${option.secondaryDimension}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="option-effects">${option.effects}</div>
+                    <div class="option-gap tooltip">
+                        ${option.gap.split(' – ')[0]}
+                        <span class="tooltiptext">${option.gap}</span>
+                    </div>
+                `;
+                
+                optionCard.addEventListener('click', () => toggleOption(option.id));
+                optionsContainer.appendChild(optionCard);
+            });
+        }
+
+        // Toggle selection of an option
+        function toggleOption(id) {
+            const option = serviceOptions.find(opt => opt.id === id);
+            const index = selectedOptions.indexOf(id);
+            
+            if (index === -1) {
+                // Check if adding this option would exceed budget
+                if (spentBudget + option.cost > totalBudget) {
+                    alert("This selection would exceed your budget of ₹10L!");
+                    return;
+                }
+                selectedOptions.push(id);
+            } else {
+                selectedOptions.splice(index, 1);
+            }
+            
+            renderOptions();
+            updateBudget();
+            updateMetrics();
+        }
+
+        // Update budget display
+        function updateBudget() {
+            spentBudget = selectedOptions.reduce((total, id) => {
+                const option = serviceOptions.find(opt => opt.id === id);
+                return total + option.cost;
+            }, 0);
+            
+            const remainingBudget = totalBudget - spentBudget;
+            
+            document.getElementById('available-budget').textContent = formatCurrency(totalBudget);
+            document.getElementById('spent-budget').textContent = formatCurrency(spentBudget);
+            document.getElementById('remaining-budget').textContent = formatCurrency(remainingBudget);
+        }
+
+        // Update metrics based on selections
+        function updateMetrics() {
+            let csatChange = 0;
+            let loyaltyChange = 0;
+            let gapReduction = 0;
+            
+            selectedOptions.forEach(id => {
+                const option = serviceOptions.find(opt => opt.id === id);
+                csatChange += option.csatImpact;
+                loyaltyChange += option.loyaltyImpact;
+                gapReduction += option.gapReduction;
+            });
+            
+            // Scale the changes
+            csatChange = Math.min(Math.round(csatChange * 0.5), 25);
+            loyaltyChange = Math.min(Math.round(loyaltyChange * 0.5), 25);
+            
+            const newCsat = baseCsat + csatChange;
+            const newLoyalty = baseLoyalty + loyaltyChange;
+            
+            let gapStatus = "High";
+            if (gapReduction > 30) gapStatus = "Low";
+            else if (gapReduction > 15) gapStatus = "Medium";
+            
+            document.getElementById('csat-score').textContent = `${newCsat}%`;
+            document.getElementById('csat-change').textContent = csatChange > 0 ? `+${csatChange}%` : `${csatChange}%`;
+            document.getElementById('csat-change').style.color = csatChange > 0 ? 'green' : 'red';
+            
+            document.getElementById('loyalty-score').textContent = `${newLoyalty}%`;
+            document.getElementById('loyalty-change').textContent = loyaltyChange > 0 ? `+${loyaltyChange}%` : `${loyaltyChange}%`;
+            document.getElementById('loyalty-change').style.color = loyaltyChange > 0 ? 'green' : 'red';
+            
+            document.getElementById('gap-score').textContent = gapStatus;
+            document.getElementById('gap-change').textContent = gapStatus !== baseGap ? `${baseGap} → ${gapStatus}` : "No Change";
+            document.getElementById('gap-change').style.color = gapStatus !== baseGap ? 'green' : '#7f8c8d';
+        }
+
+        // Submit the plan and show feedback
+        function submitPlan() {
+            if (selectedOptions.length === 0) {
+                alert("Please select at least one improvement option!");
+                return;
+            }
+            
+            const feedback = document.getElementById('feedback');
+            const feedbackContent = document.getElementById('feedback-content');
+            
+            // Calculate final metrics
+            let csatChange = 0;
+            let loyaltyChange = 0;
+            let gapReduction = 0;
+            
+            selectedOptions.forEach(id => {
+                const option = serviceOptions.find(opt => opt.id === id);
+                csatChange += option.csatImpact;
+                loyaltyChange += option.loyaltyImpact;
+                gapReduction += option.gapReduction;
+            });
+            
+            // Scale the changes
+            csatChange = Math.min(Math.round(csatChange * 0.5), 25);
+            loyaltyChange = Math.min(Math.round(loyaltyChange * 0.5), 25);
+            
+            const newCsat = baseCsat + csatChange;
+            const newLoyalty = baseLoyalty + loyaltyChange;
+            
+            let gapStatus = "High";
+            if (gapReduction > 30) gapStatus = "Low";
+            else if (gapReduction > 15) gapStatus = "Medium";
+            
+            // Generate feedback
+            let overallRating = "Average";
+            let totalImpact = csatChange + loyaltyChange + (gapReduction > 30 ? 20 : gapReduction > 15 ? 10 : 0);
+            
+            if (totalImpact > 50) overallRating = "Excellent";
+            else if (totalImpact > 35) overallRating = "Good";
+            else if (totalImpact < 20) overallRating = "Poor";
+            
+            let feedbackHTML = `
+                <h3>Overall Rating: ${overallRating}</h3>
+                <p>With your budget of ₹${(spentBudget/100000).toFixed(1)}L, you've achieved:</p>
+                <ul>
+                    <li>CSAT Score: ${baseCsat}% → ${newCsat}% (${csatChange > 0 ? '+' : ''}${csatChange}%)</li>
+                    <li>Loyalty Index: ${baseLoyalty}% → ${newLoyalty}% (${loyaltyChange > 0 ? '+' : ''}${loyaltyChange}%)</li>
+                    <li>Service GAPs: ${baseGap} → ${gapStatus}</li>
+                </ul>
+                <h3>Your Selected Improvements:</h3>
+                <ul>
+            `;
+            
+            selectedOptions.forEach(id => {
+                const option = serviceOptions.find(opt => opt.id === id);
+                feedbackHTML += `<li>${option.title} (₹${(option.cost/100000).toFixed(1)}L)</li>`;
+            });
+            
+            feedbackHTML += `</ul>
+                <h3>Analysis:</h3>
+                <p>${generateAnalysis(csatChange, loyaltyChange, gapStatus, selectedOptions)}</p>
+                <h3>Learning Points:</h3>
+                <ul>
+                    <li>SERVQUAL dimensions work together - balancing them is key to overall satisfaction</li>
+                    <li>Addressing service gaps directly impacts both CSAT and loyalty</li>
+                    <li>Some investments have higher ROI than others for specific metrics</li>
+                    <li>Budget constraints force strategic prioritization of service improvements</li>
+                </ul>
+            `;
+            
+            feedbackContent.innerHTML = feedbackHTML;
+            feedback.style.display = 'block';
+            
+            // Scroll to feedback
+            feedback.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Generate analysis based on selections
+        function generateAnalysis(csatChange, loyaltyChange, gapStatus, selectedIds) {
+            let analysis = "";
+            
+            // Check for balanced approach
+            const dimensions = new Set();
+            selectedIds.forEach(id => {
+                const option = serviceOptions.find(opt => opt.id === id);
+                dimensions.add(option.primaryDimension);
+                if (option.secondaryDimension) dimensions.add(option.secondaryDimension);
+            });
+            
+            if (dimensions.size >= 4) {
+                analysis += "You've taken a balanced approach across multiple SERVQUAL dimensions. ";
+            } else {
+                analysis += "Your strategy focuses on fewer SERVQUAL dimensions, which may create imbalances. ";
+            }
+            
+            // Check for gap reduction
+            if (gapStatus === "Low") {
+                analysis += "You've significantly reduced service gaps, which should lead to sustainable improvements. ";
+            } else if (gapStatus === "Medium") {
+                analysis += "You've made progress on service gaps, but some issues may persist. ";
+            } else {
+                analysis += "Service gaps remain high, which may undermine your other improvements over time. ";
+            }
+            
+            // Check for specific strategic choices
+            if (selectedIds.includes(5)) {
+                analysis += "Investing in advanced diagnostic equipment shows commitment to core service reliability. ";
+            }
+            
+            if (selectedIds.includes(6)) {
+                analysis += "The patient mobile app is a forward-thinking choice that addresses modern patient expectations. ";
+            }
+            
+            if (selectedIds.includes(9) || selectedIds.includes(10)) {
+                analysis += "Your focus on feedback systems and audits demonstrates commitment to continuous improvement. ";
+            }
+            
+            if (csatChange > 15 && loyaltyChange > 15) {
+                analysis += "Your balanced focus on both satisfaction and loyalty metrics is excellent. ";
+            } else if (csatChange > loyaltyChange + 10) {
+                analysis += "Your strategy prioritizes short-term satisfaction over long-term loyalty. ";
+            } else if (loyaltyChange > csatChange + 10) {
+                analysis += "Your approach focuses on building loyalty, which may pay off in the long run. ";
+            }
+            
+            return analysis;
+        }
+
+        // Reset all selections
+        function resetSelections() {
+            selectedOptions = [];
+            renderOptions();
+            updateBudget();
+            updateMetrics();
+            
+            const feedback = document.getElementById('feedback');
+            feedback.style.display = 'none';
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN').format(amount);
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+<footer style="margin-top: 50px; text-align: center; color: #87CEEB; font-size: 18px; font-weight: bold;">
+    <p>Manage Servqual Manipal, Goa | Curator Dr Pravat, GIM Goa</p>
+</footer>
+</body>
+</html>
